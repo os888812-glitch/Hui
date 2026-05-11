@@ -11,14 +11,13 @@ from aiogram.filters import CommandStart
 from aiogram.types import CallbackQuery, FSInputFile, InputMediaAudio, Message
 from aiogram.client.default import DefaultBotProperties
 
-from .cache import ResultCache
-from .config import Settings, load_settings
-from .formatting import intro_message, render_section_items, render_tracks
-from .keyboards import category_keyboard, results_keyboard, section_keyboard, source_keyboard
-from .models import Track
-from .soundcloud import SoundCloudClient
-from .stickers import StartSticker
-
+from cache import ResultCache
+from config import Settings, load_settings
+from formatting import intro_message, render_section_items, render_tracks
+from keyboards import category_keyboard, results_keyboard, section_keyboard, source_keyboard
+from models import Track
+from soundcloud import SoundCloudClient
+from stickers import StartSticker
 
 router = Router()
 cache = ResultCache()
@@ -36,7 +35,6 @@ async def handle_start(message: Message) -> None:
     if payload.startswith("track-"):
         await _handle_single_track_deeplink(message, payload.removeprefix("track-"))
         return
-
     await start_sticker.send(message.bot, message.chat.id)
     await message.answer(intro_message(settings.ad_contact))
 
@@ -46,14 +44,12 @@ async def handle_query(message: Message) -> None:
     query = (message.text or "").strip()
     if len(query) < 3 or query.startswith("/"):
         return
-
     try:
         tracks = await soundcloud.search(query)
     except Exception as exc:
         logging.exception("SoundCloud search failed")
         await message.answer(f"Не получилось найти треки: <code>{exc}</code>")
         return
-
     search_key = cache.put_search(query, tracks)
     await message.answer(
         render_tracks(
@@ -83,13 +79,11 @@ async def handle_page(callback: CallbackQuery) -> None:
     if not callback.message or not callback.data:
         await callback.answer()
         return
-
     _, search_key, raw_page = callback.data.split(":", 2)
     search = cache.get_search(search_key)
     if not search:
         await callback.answer("Результаты устарели. Отправьте запрос ещё раз.", show_alert=True)
         return
-
     page = _safe_page(raw_page)
     await callback.message.edit_text(
         render_tracks(
@@ -115,13 +109,11 @@ async def handle_category_menu(callback: CallbackQuery) -> None:
     if not callback.message or not callback.data:
         await callback.answer()
         return
-
     _, search_key, raw_page, selected = callback.data.split(":", 3)
     search = cache.get_search(search_key)
     if not search:
         await callback.answer("Результаты устарели. Отправьте запрос ещё раз.", show_alert=True)
         return
-
     page = _safe_page(raw_page)
     await callback.message.edit_reply_markup(
         reply_markup=category_keyboard(selected or None, search_key, page)
@@ -134,13 +126,11 @@ async def handle_section(callback: CallbackQuery) -> None:
     if not callback.message or not callback.data:
         await callback.answer()
         return
-
     _, section, search_key, raw_page = callback.data.split(":", 3)
     search = cache.get_search(search_key)
     if not search:
         await callback.answer("Результаты устарели. Отправьте запрос ещё раз.", show_alert=True)
         return
-
     await callback.answer("Открываю...")
     page = _safe_page(raw_page)
     try:
@@ -149,7 +139,6 @@ async def handle_section(callback: CallbackQuery) -> None:
         logging.exception("SoundCloud section search failed")
         await callback.message.edit_text(f"Не получилось открыть раздел: <code>{exc}</code>")
         return
-
     if section == "songs":
         text = render_tracks(
             search.query,
@@ -166,7 +155,6 @@ async def handle_section(callback: CallbackQuery) -> None:
             page=page,
             per_page=settings.results_per_page,
         )
-
     await callback.message.edit_text(
         text,
         reply_markup=section_keyboard(
@@ -185,25 +173,21 @@ async def handle_download_page(callback: CallbackQuery) -> None:
     if not callback.message or not callback.data:
         await callback.answer()
         return
-
     _, search_key, raw_page = callback.data.split(":", 2)
     search = cache.get_search(search_key)
     if not search:
         await callback.answer("Результаты устарели. Отправьте запрос ещё раз.", show_alert=True)
         return
-
     page = _safe_page(raw_page)
     start = page * settings.results_per_page
     tracks = search.tracks[start : start + settings.results_per_page]
     if not tracks:
         await callback.answer("На этой странице нет треков.", show_alert=True)
         return
-
     if not settings.allow_audio_downloads:
         await callback.message.answer(_source_links_message(tracks), disable_web_page_preview=True)
         await callback.answer()
         return
-
     await callback.answer(f"Загружаю файлов: {len(tracks)}")
     await _download_and_send_group(callback.message, tracks)
 
@@ -213,14 +197,12 @@ async def _handle_single_track_deeplink(message: Message, track_key: str) -> Non
     if not track:
         await message.answer("Этот трек уже устарел в кеше. Повторите поиск.")
         return
-
     if not settings.allow_audio_downloads:
         await message.answer(
             "Скачивание файлов выключено. Откройте трек по ссылке:",
             reply_markup=source_keyboard(track),
         )
         return
-
     await _download_and_send(message, track)
 
 
@@ -259,7 +241,6 @@ async def _download_and_send_group(message: Message, tracks: list[Track]) -> Non
             except Exception as exc:
                 logging.exception("SoundCloud grouped download failed")
                 failed.append(f"{track.display_artist} - {track.title}: {exc}")
-
         if downloaded:
             media = [
                 InputMediaAudio(
@@ -271,7 +252,6 @@ async def _download_and_send_group(message: Message, tracks: list[Track]) -> Non
                 for track, path in downloaded
             ]
             await message.answer_media_group(media=media)
-
         if failed:
             await message.answer("Не получилось скачать:\n" + "\n".join(f"• {item}" for item in failed[:5]))
     finally:
@@ -287,7 +267,6 @@ async def _section_tracks(search_key: str, section: str) -> list[Track]:
         return search.tracks
     if section in search.sections:
         return search.sections[section]
-
     tracks = await soundcloud.search_section(search.query, section)
     cache.put_section(search_key, section, tracks)
     return tracks
@@ -333,7 +312,7 @@ def _source_links_message(tracks: list[Track]) -> str:
         url = escape(track.url, quote=True)
         title = escape(track.title)
         artist = escape(track.display_artist)
-        lines.append(f"• <a href=\"{url}\">{title}</a> · {artist}")
+        lines.append(f'• <a href="{url}">{title}</a> · {artist}')
     return "\n".join(lines)
 
 
@@ -345,6 +324,7 @@ def _music_caption() -> str:
 
 async def main() -> None:
     global settings, soundcloud, start_sticker, bot_username
+
     logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(name)s: %(message)s")
     settings = load_settings()
     soundcloud = SoundCloudClient(search_limit=settings.search_limit)
@@ -356,10 +336,13 @@ async def main() -> None:
     )
     dispatcher = Dispatcher()
     dispatcher.include_router(router)
+
     me = await bot.get_me()
     bot_username = me.username
+
     await dispatcher.start_polling(bot)
 
 
 if __name__ == "__main__":
     asyncio.run(main())
+        
