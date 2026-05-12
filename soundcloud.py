@@ -8,7 +8,7 @@ from typing import Any
 from yt_dlp import YoutubeDL
 from yt_dlp.extractor.soundcloud import SoundcloudBaseIE
 
-from .models import Track
+from models import Track
 
 
 class SoundCloudClient:
@@ -30,7 +30,6 @@ class SoundCloudClient:
     def _search_sync(self, query: str) -> list[Track]:
         if _looks_like_url(query):
             return [self._resolve_sync(query)]
-
         options = {
             "quiet": True,
             "no_warnings": True,
@@ -40,21 +39,18 @@ class SoundCloudClient:
         }
         with YoutubeDL(options) as ydl:
             info = ydl.extract_info(f"scsearch{self.search_limit}:{query}", download=False)
-
-        entries = (info or {}).get("entries") or []
-        return [_track_from_info(entry) for entry in entries if entry]
+            entries = (info or {}).get("entries") or []
+            return [_track_from_info(entry) for entry in entries if entry]
 
     def _search_section_sync(self, query: str, section: str) -> list[Track]:
         if section == "songs":
             return self._search_sync(query)
-
         endpoint = {
             "albums": "search/albums",
             "playlists": "search/playlists",
         }.get(section)
         if not endpoint:
             return []
-
         options = {
             "quiet": True,
             "no_warnings": True,
@@ -76,9 +72,8 @@ class SoundCloudClient:
                 },
                 headers=ie._HEADERS,
             )
-
-        entries = (data or {}).get("collection") or []
-        return [_collection_from_info(entry) for entry in entries if entry]
+            entries = (data or {}).get("collection") or []
+            return [_collection_from_info(entry) for entry in entries if entry]
 
     def _resolve_sync(self, url: str) -> Track:
         options = {
@@ -89,7 +84,7 @@ class SoundCloudClient:
         }
         with YoutubeDL(options) as ydl:
             info = ydl.extract_info(url, download=False)
-        return _track_from_info(info)
+            return _track_from_info(info)
 
     def _download_sync(self, track: Track, downloads_dir: Path) -> Path:
         downloads_dir.mkdir(parents=True, exist_ok=True)
@@ -105,22 +100,19 @@ class SoundCloudClient:
             with YoutubeDL(options) as ydl:
                 info = ydl.extract_info(track.url, download=True)
                 filename = Path(ydl.prepare_filename(info))
-
-            final_path = downloads_dir / filename.name
-            filename.replace(final_path)
-            return final_path
+                final_path = downloads_dir / filename.name
+                filename.replace(final_path)
+                return final_path
 
 
 def _track_from_info(info: dict[str, Any] | None) -> Track:
     if not info:
         raise ValueError("SoundCloud returned an empty response.")
-
     title = info.get("title") or "Untitled"
     artist = info.get("uploader") or info.get("creator") or info.get("channel") or ""
     url = info.get("webpage_url") or info.get("url")
     if not url:
         raise ValueError("SoundCloud result has no URL.")
-
     return Track(
         title=str(title),
         artist=str(artist),
@@ -136,7 +128,6 @@ def _collection_from_info(info: dict[str, Any]) -> Track:
     url = info.get("permalink_url") or info.get("uri")
     if not url:
         raise ValueError("SoundCloud collection result has no URL.")
-
     duration_ms = _safe_int(info.get("duration"))
     duration = duration_ms // 1000 if duration_ms else None
     source_id = info.get("id") or info.get("urn") or url
@@ -160,3 +151,4 @@ def _safe_int(value: Any) -> int | None:
 def _looks_like_url(value: str) -> bool:
     lower = value.strip().lower()
     return lower.startswith("http://") or lower.startswith("https://")
+    
