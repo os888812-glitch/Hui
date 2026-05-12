@@ -6,8 +6,6 @@ from pathlib import Path
 
 from dotenv import load_dotenv
 
-# В Railway файл лежит прямо в /app/config.py
-# parents[0] = /app — это и есть корень проекта
 PROJECT_ROOT = Path(__file__).resolve().parent
 
 ASSETS_DIR = PROJECT_ROOT / "assets"
@@ -36,8 +34,8 @@ class Settings:
     sticker_set_name: str = "HeartBalloons"
     sticker_index: int = 5
     fallback_sticker_path: Path = field(default_factory=lambda: ASSETS_DIR / "heartballoons_05.webp")
-    ad_contact: str = "loaditbot@proton.me"
-    allow_audio_downloads: bool = False
+    ad_contact: str = ""
+    allow_audio_downloads: bool = True
     max_audio_mb: int = 45
     search_limit: int = 10
     results_per_page: int = 5
@@ -62,8 +60,8 @@ def load_settings() -> Settings:
         bot_token=token,
         sticker_set_name=os.getenv("STICKER_SET_NAME", "HeartBalloons").strip() or "HeartBalloons",
         sticker_index=max(1, _int_env("STICKER_INDEX", 5)),
-        ad_contact=os.getenv("AD_CONTACT", "loaditbot@proton.me").strip() or "loaditbot@proton.me",
-        allow_audio_downloads=_bool_env("ALLOW_AUDIO_DOWNLOADS", False),
+        ad_contact=os.getenv("AD_CONTACT", "").strip(),
+        allow_audio_downloads=_bool_env("ALLOW_AUDIO_DOWNLOADS", True),
         max_audio_mb=max(1, _int_env("MAX_AUDIO_MB", 45)),
         search_limit=max(1, _int_env("SEARCH_LIMIT", 10)),
         results_per_page=max(1, _int_env("RESULTS_PER_PAGE", 5)),
