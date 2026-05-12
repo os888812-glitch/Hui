@@ -1,13 +1,15 @@
 from __future__ import annotations
 
 import os
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from pathlib import Path
 
 from dotenv import load_dotenv
 
+# В Railway файл лежит прямо в /app/config.py
+# parents[0] = /app — это и есть корень проекта
+PROJECT_ROOT = Path(__file__).resolve().parent
 
-PROJECT_ROOT = Path(__file__).resolve().parents[2]
 ASSETS_DIR = PROJECT_ROOT / "assets"
 
 
@@ -33,13 +35,13 @@ class Settings:
     bot_token: str
     sticker_set_name: str = "HeartBalloons"
     sticker_index: int = 5
-    fallback_sticker_path: Path = ASSETS_DIR / "heartballoons_05.webp"
+    fallback_sticker_path: Path = field(default_factory=lambda: ASSETS_DIR / "heartballoons_05.webp")
     ad_contact: str = "loaditbot@proton.me"
     allow_audio_downloads: bool = False
     max_audio_mb: int = 45
     search_limit: int = 10
     results_per_page: int = 5
-    downloads_dir: Path = PROJECT_ROOT / "downloads"
+    downloads_dir: Path = field(default_factory=lambda: PROJECT_ROOT / "downloads")
 
     @property
     def max_audio_bytes(self) -> int:
@@ -48,9 +50,13 @@ class Settings:
 
 def load_settings() -> Settings:
     load_dotenv(PROJECT_ROOT / ".env", encoding="utf-8-sig")
+
     token = os.getenv("BOT_TOKEN", "").strip()
     if not token:
-        raise RuntimeError("BOT_TOKEN is not set. Copy .env.example to .env and add your Telegram bot token.")
+        raise RuntimeError(
+            "BOT_TOKEN is not set. "
+            "Add the BOT_TOKEN variable in Railway project settings → Variables."
+        )
 
     return Settings(
         bot_token=token,
@@ -62,3 +68,4 @@ def load_settings() -> Settings:
         search_limit=max(1, _int_env("SEARCH_LIMIT", 10)),
         results_per_page=max(1, _int_env("RESULTS_PER_PAGE", 5)),
     )
+    
