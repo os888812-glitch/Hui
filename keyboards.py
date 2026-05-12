@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup
 
-from .models import Track
+from models import Track
 
 
 def results_keyboard(
@@ -13,8 +13,8 @@ def results_keyboard(
 ) -> InlineKeyboardMarkup:
     start = page * per_page
     rows: list[list[InlineKeyboardButton]] = []
-    nav_row: list[InlineKeyboardButton] = []
 
+    nav_row: list[InlineKeyboardButton] = []
     if page > 0:
         nav_row.append(
             InlineKeyboardButton(
@@ -75,8 +75,8 @@ def section_keyboard(
         "playlists": "Плейлисты",
     }
     rows: list[list[InlineKeyboardButton]] = []
-    nav_row: list[InlineKeyboardButton] = []
 
+    nav_row: list[InlineKeyboardButton] = []
     if page > 0:
         nav_row.append(
             InlineKeyboardButton(
@@ -103,3 +103,4 @@ def source_keyboard(track: Track) -> InlineKeyboardMarkup:
     return InlineKeyboardMarkup(
         inline_keyboard=[[InlineKeyboardButton(text="Открыть трек", url=track.url)]]
     )
+    
