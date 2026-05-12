@@ -1,10 +1,9 @@
 from __future__ import annotations
 
 from html import escape
-
 from collections.abc import Callable
 
-from .models import Track
+from models import Track
 
 
 def format_duration(seconds: int | None) -> str:
@@ -34,7 +33,6 @@ def render_tracks(
     visible = tracks[start : start + per_page]
     if not visible:
         return f"Ничего не нашёл по запросу <b>{escape(query)}</b>."
-
     lines = []
     for index, track in enumerate(visible):
         marker = relevance_marker(start + index)
@@ -60,7 +58,6 @@ def render_section_items(
     if not visible:
         label = {"albums": "альбомов", "playlists": "плейлистов", "songs": "песен"}.get(section, "результатов")
         return f"Не нашёл {label} по запросу <b>{escape(query)}</b>."
-
     lines = []
     for track in visible:
         title = escape(track.title)
@@ -84,3 +81,4 @@ def tab_placeholder(tab: str, query: str) -> str:
         f"<b>{label}</b>\n"
         f"Раздел выбран для запроса <b>{escape(query)}</b>."
     )
+    
