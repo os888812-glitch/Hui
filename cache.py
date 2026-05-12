@@ -4,7 +4,7 @@ import time
 import uuid
 from dataclasses import dataclass, field
 
-from .models import Track
+from models import Track
 
 
 @dataclass
@@ -65,3 +65,4 @@ class ResultCache:
         self._tracks = {
             key: value for key, value in self._tracks.items() if value[1] >= cutoff
         }
+        
