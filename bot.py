@@ -4,11 +4,13 @@ import asyncio
 import logging
 from pathlib import Path
 from html import escape
+
 from aiogram import Bot, Dispatcher, F, Router
 from aiogram.enums import ParseMode
 from aiogram.filters import CommandStart
 from aiogram.types import CallbackQuery, FSInputFile, InputMediaAudio, Message
 from aiogram.client.default import DefaultBotProperties
+
 from cache import ResultCache
 from config import Settings, load_settings
 from formatting import intro_message, render_section_items, render_tracks
@@ -343,4 +345,4 @@ async def main() -> None:
 
 if __name__ == "__main__":
     asyncio.run(main())
-        
+    
